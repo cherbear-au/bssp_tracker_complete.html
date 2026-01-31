@@ -1,0 +1,3376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BSSP Education Program Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Crimson+Pro:wght@600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #2c5f8d;
+            --primary-dark: #1a3a57;
+            --secondary: #d68910;
+            --accent: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --year1-color: #3498db;
+            --year2-color: #27ae60;
+            --bg-light: #f8f9fa;
+            --bg-white: #ffffff;
+            --text-dark: #2c3e50;
+            --text-muted: #7f8c8d;
+            --border: #e0e6ed;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8f4f8 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Mobile-first responsive breakpoints */
+        @media (max-width: 768px) {
+            body {
+                font-size: 14px;
+            }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: white;
+            padding: 1rem;
+            box-shadow: 0 4px 12px var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.8rem 1rem;
+            }
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .header h1 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1rem;
+            }
+        }
+        
+        .mobile-menu-btn {
+            display: none;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-right: 1rem;
+        }
+        
+        .search-input {
+            padding: 0.6rem 2.5rem 0.6rem 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            width: 300px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.7);
+            pointer-events: none;
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .search-results.active {
+            display: block;
+        }
+        
+        .search-result-item {
+            padding: 0.8rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-dark);
+        }
+        
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .search-result-item:hover {
+            background: var(--bg-light);
+        }
+        
+        .search-result-type {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.2rem;
+        }
+        
+        .search-result-title {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .search-no-results {
+            padding: 1rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .login-container {
+            max-width: 450px;
+            margin: 4rem auto;
+            background: white;
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+        
+        .login-container h2 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+        
+        .login-container p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .sidebar {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px var(--shadow);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+        
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .nav-item {
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-item:hover {
+            background: var(--bg-light);
+            transform: translateX(4px);
+        }
+        
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .main-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px var(--shadow);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px var(--shadow);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .stat-card h3 {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            font-family: 'Crimson Pro', serif;
+        }
+        
+        .stat-card.warning {
+            background: linear-gradient(135deg, var(--warning) 0%, #e67e22 100%);
+        }
+        
+        .stat-card.success {
+            background: linear-gradient(135deg, var(--success) 0%, #229954 100%);
+        }
+        
+        .stat-card.secondary {
+            background: linear-gradient(135deg, var(--secondary) 0%, #cd6f10 100%);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: var(--bg-light);
+        }
+        
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-dark);
+            border-bottom: 2px solid var(--border);
+        }
+        
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        tbody tr:hover {
+            background: var(--bg-light);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .badge-year1 {
+            background: var(--year1-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+        }
+        
+        .badge-year2 {
+            background: var(--year2-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success) 0%, var(--accent) 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .modal-header h2 {
+            font-family: 'Crimson Pro', serif;
+            color: var(--primary);
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            color: var(--danger);
+        }
+        
+        .survey-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 16px var(--shadow);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .card-header h3 {
+            font-family: 'Crimson Pro', serif;
+            color: var(--primary);
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .rating-input {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .rating-input input[type="radio"] {
+            width: auto;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 1.5rem 0;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .trainee-name-link {
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .trainee-name-link:hover {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .attendance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 0.3rem;
+            margin-top: 0.5rem;
+        }
+        
+        .attendance-cell {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: help;
+        }
+        
+        .attendance-cell.present {
+            background: var(--success);
+            color: white;
+        }
+        
+        .attendance-cell.absent {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .attendance-cell.pending {
+            background: var(--border);
+            color: var(--text-muted);
+        }
+        
+        .notes-display {
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            font-style: italic;
+        }
+        
+        .notes-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 0.2rem;
+        }
+        
+        .trainee-list-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .trainee-list-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 16px var(--shadow);
+            transform: translateX(4px);
+        }
+        
+        .trainee-list-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .trainee-list-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: white;
+        }
+        
+        .trainee-list-details h4 {
+            margin-bottom: 0.3rem;
+            color: var(--primary);
+        }
+        
+        .trainee-list-meta {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        .form-builder-section {
+            background: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .question-builder {
+            background: white;
+            border: 2px solid var(--border);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .question-builder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .attendance-option {
+            display: none;
+        }
+        
+        .attendance-button {
+            flex: 1;
+            padding: 1rem;
+            border: 3px solid;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+        }
+        
+        .attendance-button.present {
+            border-color: var(--success);
+            background: white;
+            color: var(--success);
+        }
+        
+        .attendance-button.absent {
+            border-color: var(--danger);
+            background: white;
+            color: var(--danger);
+        }
+        
+        .attendance-button.present:hover {
+            background: rgba(39, 174, 96, 0.1);
+        }
+        
+        .attendance-button.absent:hover {
+            background: rgba(231, 76, 60, 0.1);
+        }
+        
+        .attendance-option:checked + .attendance-button.present {
+            background: var(--success);
+            color: white;
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+        
+        .attendance-option:checked + .attendance-button.absent {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+        
+        .attendance-row {
+            border: 2px solid var(--border);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+            transition: all 0.3s ease;
+        }
+        
+        .attendance-row.has-selection {
+            border-color: var(--accent);
+            background: var(--bg-light);
+        }
+        
+        .attendance-buttons-container {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.8rem;
+        }
+        
+        .attendance-buttons-container.selected-present .attendance-button.absent {
+            opacity: 0.4;
+            filter: grayscale(50%);
+        }
+        
+        .attendance-buttons-container.selected-absent .attendance-button.present {
+            opacity: 0.4;
+            filter: grayscale(50%);
+        }
+        
+        .admin-modified-badge {
+            display: inline-block;
+            background: #ff9800;
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        
+        .admin-modified-row {
+            border-left: 4px solid #ff9800 !important;
+            background: rgba(255, 152, 0, 0.05);
+        }
+        
+        .admin-controls {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .admin-warning {
+            background: #fff3cd;
+            border: 2px solid #ff9800;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen">
+        <div class="login-container">
+            <h2>BSSP Program Tracker</h2>
+            <p>Sign in to access your education program data</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required placeholder="e.g., BSSP-001">
+                    <small style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.3rem; display: block;">
+                        Your role is automatically identified by your username prefix
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+            </form>
+            
+            <div style="margin-top: 1.5rem; padding: 1rem; background: #fff3cd; border-radius: 8px; border-left: 4px solid var(--warning);">
+                <p style="font-size: 0.85rem; font-weight: 600; color: #856404; margin-bottom: 0.5rem;">📋 Username Format Guide:</p>
+                <div style="font-size: 0.8rem; color: #856404; line-height: 1.6;">
+                    <div style="margin-bottom: 0.3rem;">• <strong>BSSP-</strong>[username] → Trainee access</div>
+                    <div style="margin-bottom: 0.3rem;">• <strong>edu-</strong>[username] → Educator access</div>
+                    <div>• <strong>admin-</strong>[username] → Administrator access</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1rem; padding: 1rem; background: linear-gradient(135deg, #e8f4f8 0%, #d1ecf1 100%); border-radius: 8px; border-left: 4px solid var(--accent);">
+                <p style="margin-bottom: 0.8rem; font-size: 0.9rem; font-weight: 600; color: var(--primary);">Demo Credentials:</p>
+                <div style="display: grid; gap: 0.5rem;">
+                    <div>
+                        <strong style="font-size: 0.85rem; color: var(--text-dark);">Trainee:</strong>
+                        <div style="font-family: monospace; font-size: 0.9rem; color: var(--year1-color); margin-top: 0.2rem;">
+                            BSSP-001 | BSSP-002 | BSSP-003
+                        </div>
+                    </div>
+                    <div>
+                        <strong style="font-size: 0.85rem; color: var(--text-dark);">Educator:</strong>
+                        <div style="font-family: monospace; font-size: 0.9rem; color: var(--warning); margin-top: 0.2rem;">
+                            edu-ctaylor
+                        </div>
+                    </div>
+                    <div>
+                        <strong style="font-size: 0.85rem; color: var(--text-dark);">Administrator:</strong>
+                        <div style="font-family: monospace; font-size: 0.9rem; color: var(--danger); margin-top: 0.2rem;">
+                            admin-main
+                        </div>
+                    </div>
+                    <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(0,0,0,0.1);">
+                        <small style="color: var(--text-muted); font-size: 0.8rem;">All demo accounts use password: <strong>demo123</strong></small>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 1rem; text-align: center;">
+                <button type="button" class="btn btn-danger" onclick="clearLocalStorage()" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+                    🔄 Reset Database (if login fails)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="hidden">
+        <div class="header">
+            <div class="header-content">
+                <h1>BSSP Program Tracker</h1>
+                <div class="user-info">
+                    <div class="search-container" id="searchContainer">
+                        <input type="text" class="search-input" id="searchInput" placeholder="Search trainees or forms...">
+                        <span class="search-icon">🔍</span>
+                        <div class="search-results" id="searchResults"></div>
+                    </div>
+                    <div class="user-avatar" id="userAvatar">T</div>
+                    <div>
+                        <div style="font-weight: 600;" id="userName">Trainee Name</div>
+                        <div style="font-size: 0.85rem; opacity: 0.8;" id="userRole">Trainee</div>
+                    </div>
+                    <button class="btn btn-logout" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="dashboard">
+                <div class="sidebar">
+                    <nav id="sidebarNav"></nav>
+                </div>
+
+                <div class="main-content">
+                    <!-- Overview Section -->
+                    <div id="overviewSection" class="content-section">
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;">Dashboard Overview</h2>
+                        <div class="stats-grid" id="statsGrid"></div>
+                        <div id="overviewContent"></div>
+                    </div>
+
+                    <!-- Individual Trainee Section -->
+                    <div id="traineeDetailSection" class="content-section hidden">
+                        <div class="breadcrumb">
+                            <a href="#" onclick="showSection('overview')">Overview</a>
+                            <span>›</span>
+                            <span id="traineeDetailName">Trainee Details</span>
+                        </div>
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;" id="traineeDetailTitle">Trainee Profile</h2>
+                        <div id="traineeDetailContent"></div>
+                    </div>
+
+                    <!-- Analytics Section -->
+                    <div id="analyticsSection" class="content-section hidden">
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;">Analytics & Reports</h2>
+                        <div id="analyticsContent"></div>
+                    </div>
+
+                    <!-- Progress Tracking Section -->
+                    <div id="progressSection" class="content-section hidden">
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;">Progress Tracking</h2>
+                        <div id="progressContent"></div>
+                    </div>
+
+                    <!-- Surveys Section -->
+                    <div id="surveysSection" class="content-section hidden">
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;">Surveys & Feedback</h2>
+                        <div id="surveysContent"></div>
+                    </div>
+
+                    <!-- Documents Section -->
+                    <div id="documentsSection" class="content-section hidden">
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;">Documents</h2>
+                        <div id="documentsContent"></div>
+                    </div>
+
+                    <!-- Survey Management Section -->
+                    <div id="surveyManagementSection" class="content-section hidden">
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;">Survey Management</h2>
+                        <button class="btn btn-primary" onclick="showCreateSurveyModal()">+ Create New Survey</button>
+                        <div id="surveyManagementContent"></div>
+                    </div>
+
+                    <!-- Forms Section (renamed from Survey Management) -->
+                    <div id="formsSection" class="content-section hidden">
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;">Forms Management</h2>
+                        <button class="btn btn-primary" onclick="showSection('formCreator')">+ Create New Form</button>
+                        <div id="formsContent"></div>
+                    </div>
+
+                    <!-- Form Creator Section -->
+                    <div id="formCreatorSection" class="content-section hidden">
+                        <div class="breadcrumb">
+                            <a href="#" onclick="showSection('forms')">Forms</a>
+                            <span>›</span>
+                            <span>Create New Form</span>
+                        </div>
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;">Create New Form</h2>
+                        <div id="formCreatorContent"></div>
+                    </div>
+
+                    <!-- Trainees List Section -->
+                    <div id="traineesSection" class="content-section hidden">
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;">All Trainees</h2>
+                        <div id="traineesContent"></div>
+                    </div>
+
+                    <!-- Trainee Profile Section -->
+                    <div id="traineeProfileSection" class="content-section hidden">
+                        <div class="breadcrumb">
+                            <a href="#" onclick="showSection('trainees')">Trainees</a>
+                            <span>›</span>
+                            <span id="traineeProfileName">Trainee Profile</span>
+                        </div>
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;" id="traineeProfileTitle">Trainee Profile</h2>
+                        <div id="traineeProfileContent"></div>
+                    </div>
+
+                    <!-- Attendance Section -->
+                    <div id="attendanceSection" class="content-section hidden">
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;">Attendance Tracking</h2>
+                        <div id="attendanceContent"></div>
+                    </div>
+
+                    <!-- Admin Panel Section -->
+                    <div id="adminPanelSection" class="content-section hidden">
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;">Administrator Panel</h2>
+                        <div id="adminPanelContent"></div>
+                    </div>
+
+                    <!-- Audit Log Section -->
+                    <div id="auditLogSection" class="content-section hidden">
+                        <h2 style="font-family: 'Crimson Pro', serif; margin-bottom: 1.5rem;">Audit Log</h2>
+                        <div id="auditLogContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="assessmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Quarterly Assessment</h2>
+                <button class="close-btn" onclick="closeAssessmentModal()">&times;</button>
+            </div>
+            <div id="assessmentFormContent"></div>
+        </div>
+    </div>
+
+    <div id="attendanceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Record Attendance</h2>
+                <button class="close-btn" onclick="closeAttendanceModal()">&times;</button>
+            </div>
+            <div id="attendanceFormContent"></div>
+        </div>
+    </div>
+
+    <div id="surveyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Complete Survey</h2>
+                <button class="close-btn" onclick="closeSurveyModal()">&times;</button>
+            </div>
+            <div id="surveyFormContent"></div>
+        </div>
+    </div>
+
+    <div id="createSurveyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Survey</h2>
+                <button class="close-btn" onclick="closeCreateSurveyModal()">&times;</button>
+            </div>
+            <div id="createSurveyFormContent"></div>
+        </div>
+    </div>
+
+    <!-- Create Trainee Modal -->
+    <div id="createTraineeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Trainee Profile</h2>
+                <button class="close-btn" onclick="closeCreateTraineeModal()">&times;</button>
+            </div>
+            <div id="createTraineeFormContent"></div>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div id="resetPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Reset Password</h2>
+                <button class="close-btn" onclick="closeResetPasswordModal()">&times;</button>
+            </div>
+            <div id="resetPasswordFormContent"></div>
+        </div>
+    </div>
+
+    <!-- Edit Form Data Modal -->
+    <div id="editFormDataModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Form Response</h2>
+                <button class="close-btn" onclick="closeEditFormDataModal()">&times;</button>
+            </div>
+            <div id="editFormDataContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const DB_KEY = 'bssp_program_data';
+        
+        // Education sessions for attendance tracking
+        const EDUCATION_SESSIONS = [
+            'Session 1', 'Session 2', 'Session 3', 'Session 4', 'Session 5', 
+            'Session 6', 'Session 7', 'Session 8', 'Session 9', 'Session 10'
+        ];
+        
+        function initDatabase() {
+            const stored = localStorage.getItem(DB_KEY);
+            if (!stored) {
+                const initialData = {
+                    trainees: [
+                        {
+                            id: 1,
+                            name: 'Alex Johnson',
+                            email: 'alex.johnson@example.com',
+                            username: 'BSSP-001',
+                            password: 'demo123',
+                            startDate: '2024-01-15',
+                            currentYear: 1,
+                            areaOfInterest: 'Trauma Surgery',
+                            gsseStatus: 'undecided',
+                            progress: {
+                                year1: 45,
+                                year2: 0,
+                                overall: 22.5
+                            },
+                            attendance: {
+                                'Session 1': 'present',
+                                'Session 2': 'present',
+                                'Session 3': 'absent',
+                                'Session 4': 'present',
+                                'Session 5': 'pending'
+                            },
+                            assessments: [],
+                            documents: [],
+                            monthlyProgress: [15, 22, 28, 35, 40, 45]
+                        },
+                        {
+                            id: 2,
+                            name: 'Sarah Chen',
+                            email: 'sarah.chen@example.com',
+                            username: 'BSSP-002',
+                            password: 'demo123',
+                            startDate: '2024-01-15',
+                            currentYear: 1,
+                            areaOfInterest: 'General Surgery',
+                            gsseStatus: 'yes',
+                            progress: {
+                                year1: 38,
+                                year2: 0,
+                                overall: 19
+                            },
+                            attendance: {
+                                'Session 1': 'present',
+                                'Session 2': 'present',
+                                'Session 3': 'present',
+                                'Session 4': 'absent',
+                                'Session 5': 'pending'
+                            },
+                            assessments: [],
+                            documents: [],
+                            monthlyProgress: [12, 18, 24, 30, 34, 38]
+                        },
+                        {
+                            id: 3,
+                            name: 'Michael Rodriguez',
+                            email: 'michael.r@example.com',
+                            username: 'BSSP-003',
+                            password: 'demo123',
+                            startDate: '2023-07-01',
+                            currentYear: 2,
+                            areaOfInterest: 'Vascular Surgery',
+                            gsseStatus: '2025-11',
+                            progress: {
+                                year1: 100,
+                                year2: 52,
+                                overall: 76
+                            },
+                            attendance: {
+                                'Session 1': 'present',
+                                'Session 2': 'present',
+                                'Session 3': 'present',
+                                'Session 4': 'present',
+                                'Session 5': 'present'
+                            },
+                            assessments: [
+                                {
+                                    date: '2024-03-15',
+                                    strengths: 'Excellent technical skills',
+                                    development: 'Communication with families',
+                                    goals: 'Complete advanced laparoscopy module',
+                                    educatorNotes: 'Strong progress this quarter',
+                                    educatorNotesDate: '2024-03-15'
+                                }
+                            ],
+                            documents: [],
+                            monthlyProgress: [100, 100, 100, 15, 30, 52]
+                        }
+                    ],
+                    educators: [
+                        {
+                            id: 1,
+                            name: 'Dr. Catherine Taylor',
+                            email: 'c.taylor@example.com',
+                            username: 'edu-ctaylor',
+                            password: 'demo123'
+                        }
+                    ],
+                    administrators: [
+                        {
+                            id: 1,
+                            name: 'System Administrator',
+                            email: 'admin@bssp.edu',
+                            username: 'admin-main',
+                            password: 'admin123'
+                        }
+                    ],
+                    surveys: [
+                        {
+                            id: 1,
+                            title: 'Area of Interest Survey',
+                            questions: [
+                                { id: 1, type: 'text', question: 'What is your primary area of surgical interest?' },
+                                { id: 2, type: 'rating', question: 'How confident do you feel with your current skill level?', scale: 5 }
+                            ],
+                            active: true,
+                            createdDate: '2024-01-15'
+                        }
+                    ],
+                    surveyResponses: [],
+                    attendanceRecords: [],
+                    auditLog: []
+                };
+                localStorage.setItem(DB_KEY, JSON.stringify(initialData));
+                return initialData;
+            }
+            return JSON.parse(stored);
+        }
+        
+        function logAuditEntry(action, targetType, targetId, details, modifiedBy) {
+            const entry = {
+                id: database.auditLog ? database.auditLog.length + 1 : 1,
+                timestamp: new Date().toISOString(),
+                action: action,
+                targetType: targetType,
+                targetId: targetId,
+                details: details,
+                modifiedBy: modifiedBy,
+                modifierRole: currentUserRole
+            };
+            
+            if (!database.auditLog) database.auditLog = [];
+            database.auditLog.push(entry);
+            saveDatabase(database);
+        }
+
+        function saveDatabase(data) {
+            localStorage.setItem(DB_KEY, JSON.stringify(data));
+        }
+
+        let currentUser = null;
+        let currentUserRole = null;
+        let database = initDatabase();
+        let charts = {};
+        let selectedTraineeId = null;
+        
+        // Clear localStorage function for troubleshooting
+        function clearLocalStorage() {
+            if (confirm('This will reset the database to default demo data. Continue?')) {
+                localStorage.removeItem(DB_KEY);
+                alert('Database reset! Please refresh the page.');
+                location.reload();
+            }
+        }
+
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            // Detect role from username prefix
+            let role = null;
+            if (username.startsWith('BSSP-')) {
+                role = 'trainee';
+            } else if (username.startsWith('edu-')) {
+                role = 'educator';
+            } else if (username.startsWith('admin-')) {
+                role = 'admin';
+            } else {
+                alert('Invalid username format. Please use:\n• BSSP-[ID] for trainees\n• edu-[ID] for educators\n• admin-[ID] for administrators');
+                return;
+            }
+            
+            // Find user based on detected role
+            if (role === 'trainee') {
+                const trainee = database.trainees.find(t => t.username === username);
+                if (trainee) {
+                    if (trainee.password === password) {
+                        currentUser = trainee;
+                        currentUserRole = 'trainee';
+                        showDashboard();
+                    } else {
+                        alert('Incorrect password. Please try again.');
+                    }
+                } else {
+                    alert('Trainee not found. Please check your username.\nDemo accounts: BSSP-001, BSSP-002, BSSP-003\nPassword: demo123');
+                }
+            } else if (role === 'educator') {
+                const educator = database.educators.find(e => e.username === username);
+                if (educator) {
+                    if (educator.password === password) {
+                        currentUser = educator;
+                        currentUserRole = 'educator';
+                        showDashboard();
+                    } else {
+                        alert('Incorrect password. Please try again.');
+                    }
+                } else {
+                    alert('Educator not found. Please check your username.\nDemo account: edu-ctaylor\nPassword: demo123');
+                }
+            } else if (role === 'admin') {
+                const admin = database.administrators.find(a => a.username === username);
+                if (admin) {
+                    if (admin.password === password) {
+                        currentUser = admin;
+                        currentUserRole = 'admin';
+                        showDashboard();
+                    } else {
+                        alert('Incorrect password. Please try again.');
+                    }
+                } else {
+                    alert('Administrator not found. Please check your username.\nDemo account: admin-main\nPassword: admin123');
+                }
+            }
+        });
+
+        function logout() {
+            currentUser = null;
+            currentUserRole = null;
+            selectedTraineeId = null;
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+        }
+
+        function showDashboard() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userRole').textContent = currentUserRole === 'educator' ? 'Educator' : 'Trainee';
+            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0);
+            
+            buildNavigation();
+            initializeSearch();
+            showSection('overview');
+        }
+        
+        function initializeSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+            
+            if (!searchInput) return;
+            
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                
+                if (query.length < 2) {
+                    searchResults.classList.remove('active');
+                    return;
+                }
+                
+                const results = performSearch(query);
+                displaySearchResults(results);
+            });
+            
+            // Close search results when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!document.getElementById('searchContainer').contains(e.target)) {
+                    searchResults.classList.remove('active');
+                }
+            });
+        }
+        
+        function performSearch(query) {
+            const results = [];
+            
+            // Search trainees
+            database.trainees.forEach(trainee => {
+                if (trainee.name.toLowerCase().includes(query)) {
+                    results.push({
+                        type: 'trainee',
+                        title: trainee.name,
+                        subtitle: `Year ${trainee.currentYear} • ${trainee.email}`,
+                        id: trainee.id
+                    });
+                }
+            });
+            
+            // Search forms
+            database.surveys.forEach(survey => {
+                if (survey.title.toLowerCase().includes(query)) {
+                    results.push({
+                        type: 'form',
+                        title: survey.title,
+                        subtitle: `${survey.questions.length} questions • ${survey.active ? 'Active' : 'Inactive'}`,
+                        id: survey.id
+                    });
+                }
+            });
+            
+            return results;
+        }
+        
+        function displaySearchResults(results) {
+            const searchResults = document.getElementById('searchResults');
+            
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="search-no-results">No results found</div>';
+                searchResults.classList.add('active');
+                return;
+            }
+            
+            searchResults.innerHTML = results.map(result => `
+                <div class="search-result-item" onclick="handleSearchResultClick('${result.type}', ${result.id})">
+                    <div class="search-result-type">${result.type}</div>
+                    <div class="search-result-title">${result.title}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">${result.subtitle}</div>
+                </div>
+            `).join('');
+            
+            searchResults.classList.add('active');
+        }
+        
+        function handleSearchResultClick(type, id) {
+            const searchResults = document.getElementById('searchResults');
+            const searchInput = document.getElementById('searchInput');
+            
+            searchResults.classList.remove('active');
+            searchInput.value = '';
+            
+            if (type === 'trainee') {
+                showTraineeProfile(id);
+            } else if (type === 'form') {
+                showSection('forms');
+                // Could add form detail view here
+            }
+        }
+
+        function buildNavigation() {
+            const nav = document.getElementById('sidebarNav');
+            let items;
+            
+            if (currentUserRole === 'admin') {
+                items = [
+                    { id: 'overview', label: '📊 Overview' },
+                    { id: 'trainees', label: '👥 Trainees' },
+                    { id: 'adminPanel', label: '🔧 Admin Panel' },
+                    { id: 'forms', label: '📋 Forms' },
+                    { id: 'auditLog', label: '📜 Audit Log' }
+                ];
+            } else if (currentUserRole === 'educator') {
+                items = [
+                    { id: 'overview', label: '📊 Overview' },
+                    { id: 'analytics', label: '📈 Analytics' },
+                    { id: 'trainees', label: '👥 Trainees' },
+                    { id: 'attendance', label: '✓ Attendance' },
+                    { id: 'forms', label: '📋 Forms' }
+                ];
+            } else {
+                items = [
+                    { id: 'overview', label: '📊 Dashboard' },
+                    { id: 'progress', label: '📈 My Progress' },
+                    { id: 'surveys', label: '📋 Surveys' },
+                    { id: 'documents', label: '📁 Documents' }
+                ];
+            }
+            
+            nav.innerHTML = items.map(item => 
+                `<div class="nav-item" onclick="showSection('${item.id}')">${item.label}</div>`
+            ).join('');
+        }
+
+        function showSection(section) {
+            selectedTraineeId = null;
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            
+            // Handle sections
+            const sectionId = `${section}Section`;
+            const sectionElement = document.getElementById(sectionId);
+            if (sectionElement) {
+                sectionElement.classList.remove('hidden');
+            }
+            
+            // Set active nav item
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach((item, index) => {
+                if (currentUserRole === 'admin') {
+                    const sections = ['overview', 'trainees', 'adminPanel', 'forms', 'auditLog'];
+                    if (sections[index] === section) item.classList.add('active');
+                } else if (currentUserRole === 'educator') {
+                    const sections = ['overview', 'analytics', 'trainees', 'attendance', 'forms'];
+                    if (sections[index] === section) item.classList.add('active');
+                } else {
+                    const sections = ['overview', 'progress', 'surveys', 'documents'];
+                    if (sections[index] === section) item.classList.add('active');
+                }
+            });
+            
+            loadSectionContent(section);
+        }
+        
+        function showTraineeProfile(traineeId) {
+            selectedTraineeId = traineeId;
+            const trainee = database.trainees.find(t => t.id === traineeId);
+            
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById('traineeProfileSection').classList.remove('hidden');
+            
+            document.getElementById('traineeProfileName').textContent = trainee.name;
+            document.getElementById('traineeProfileTitle').textContent = `${trainee.name} - Complete Profile`;
+            
+            loadTraineeProfile(traineeId);
+        }
+
+        function showTraineeDetail(traineeId) {
+            selectedTraineeId = traineeId;
+            const trainee = database.trainees.find(t => t.id === traineeId);
+            
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById('traineeDetailSection').classList.remove('hidden');
+            
+            document.getElementById('traineeDetailName').textContent = trainee.name;
+            document.getElementById('traineeDetailTitle').textContent = `${trainee.name} - Detailed Profile`;
+            
+            loadTraineeDetail(traineeId);
+        }
+
+        function loadSectionContent(section) {
+            switch(section) {
+                case 'overview': loadOverview(); break;
+                case 'analytics': loadAnalytics(); break;
+                case 'trainees': loadTraineesList(); break;
+                case 'progress': loadProgress(); break;
+                case 'surveys': loadSurveys(); break;
+                case 'documents': loadDocuments(); break;
+                case 'forms': loadForms(); break;
+                case 'formCreator': loadFormCreator(); break;
+                case 'attendance': loadAttendance(); break;
+                case 'adminPanel': loadAdminPanel(); break;
+                case 'auditLog': loadAuditLog(); break;
+            }
+        }
+
+        function loadOverview() {
+            const statsGrid = document.getElementById('statsGrid');
+            const overviewContent = document.getElementById('overviewContent');
+            
+            if (currentUserRole === 'educator') {
+                const totalTrainees = database.trainees.length;
+                const avgProgress = database.trainees.reduce((sum, t) => sum + t.progress.overall, 0) / totalTrainees;
+                const year1Count = database.trainees.filter(t => t.currentYear === 1).length;
+                const year2Count = database.trainees.filter(t => t.currentYear === 2).length;
+                
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <h3>Total Trainees</h3>
+                        <div class="value">${totalTrainees}</div>
+                    </div>
+                    <div class="stat-card success">
+                        <h3>Average Progress</h3>
+                        <div class="value">${Math.round(avgProgress)}%</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <h3>Year 1 Trainees</h3>
+                        <div class="value">${year1Count}</div>
+                    </div>
+                    <div class="stat-card secondary">
+                        <h3>Year 2 Trainees</h3>
+                        <div class="value">${year2Count}</div>
+                    </div>
+                `;
+                
+                overviewContent.innerHTML = `
+                    <div class="action-buttons">
+                        <button class="btn btn-success" onclick="exportAllTraineesData()">📥 Export All Data (Excel)</button>
+                        <button class="btn btn-primary" onclick="showSection('analytics')">📊 View Analytics</button>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                        <div class="card">
+                            <h3 style="margin-bottom: 1rem;">Trainee Progress</h3>
+                            <div class="chart-container">
+                                <canvas id="overviewChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h3 style="margin-bottom: 1rem;">Year Distribution</h3>
+                            <div class="chart-container" style="height: 400px;">
+                                <canvas id="yearDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Create horizontal bar chart with names on Y-axis
+                setTimeout(() => {
+                    const ctx = document.getElementById('overviewChart');
+                    if (ctx && charts.overview) charts.overview.destroy();
+                    charts.overview = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: database.trainees.map(t => t.name),
+                            datasets: [{
+                                label: 'Overall Progress (%)',
+                                data: database.trainees.map(t => t.progress.overall),
+                                backgroundColor: database.trainees.map(t => 
+                                    t.currentYear === 1 ? 'rgba(52, 152, 219, 0.7)' : 'rgba(39, 174, 96, 0.7)'
+                                ),
+                                borderColor: database.trainees.map(t => 
+                                    t.currentYear === 1 ? 'rgba(52, 152, 219, 1)' : 'rgba(39, 174, 96, 1)'
+                                ),
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            onClick: (event, elements) => {
+                                if (elements.length > 0) {
+                                    const index = elements[0].index;
+                                    const trainee = database.trainees[index];
+                                    showTraineeDetail(trainee.id);
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    title: {
+                                        display: true,
+                                        text: 'Overall Progress (%)'
+                                    }
+                                },
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Trainee'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `Progress: ${context.parsed.x}%`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Year Distribution Chart
+                    const ctx2 = document.getElementById('yearDistributionChart');
+                    if (ctx2 && charts.yearDist) charts.yearDist.destroy();
+                    charts.yearDist = new Chart(ctx2, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Year 1', 'Year 2'],
+                            datasets: [{
+                                data: [year1Count, year2Count],
+                                backgroundColor: [
+                                    'rgba(52, 152, 219, 0.7)',
+                                    'rgba(39, 174, 96, 0.7)'
+                                ],
+                                borderColor: [
+                                    'rgba(52, 152, 219, 1)',
+                                    'rgba(39, 174, 96, 1)'
+                                ],
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                }, 100);
+            } else {
+                // Trainee view remains the same
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <h3>Current Year</h3>
+                        <div class="value">Year ${currentUser.currentYear}</div>
+                    </div>
+                    <div class="stat-card success">
+                        <h3>Overall Progress</h3>
+                        <div class="value">${Math.round(currentUser.progress.overall)}%</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <h3>Attendance Rate</h3>
+                        <div class="value">${calculateAttendanceRate(currentUser)}%</div>
+                    </div>
+                    <div class="stat-card secondary">
+                        <h3>My Documents</h3>
+                        <div class="value">${currentUser.documents?.length || 0}</div>
+                    </div>
+                `;
+                
+                overviewContent.innerHTML = `
+                    <div class="action-buttons">
+                        <button class="btn btn-success" onclick="exportMyData()">📥 Export My Data (Excel)</button>
+                        <button class="btn btn-primary" onclick="showSection('documents')">📁 Upload Documents</button>
+                    </div>
+                    <h3 style="margin-top: 2rem; margin-bottom: 1rem;">My Progress</h3>
+                    <div class="card">
+                        <div class="chart-container">
+                            <canvas id="myProgressChart"></canvas>
+                        </div>
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    const ctx = document.getElementById('myProgressChart');
+                    if (ctx && charts.myProgress) charts.myProgress.destroy();
+                    charts.myProgress = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'],
+                            datasets: [{
+                                label: 'Progress (%)',
+                                data: currentUser.monthlyProgress || [0, 0, 0, 0, 0, 0],
+                                borderColor: 'rgba(52, 152, 219, 1)',
+                                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            }
+                        }
+                    });
+                }, 100);
+            }
+        }
+
+        function calculateAttendanceRate(trainee) {
+            if (!trainee.attendance) return 0;
+            const sessions = Object.values(trainee.attendance);
+            const attended = sessions.filter(s => s === 'present').length;
+            const total = sessions.filter(s => s !== 'pending').length;
+            return total > 0 ? Math.round((attended / total) * 100) : 0;
+        }
+
+        function loadTraineeDetail(traineeId) {
+            const trainee = database.trainees.find(t => t.id === traineeId);
+            const content = document.getElementById('traineeDetailContent');
+            
+            const latestAssessment = trainee.assessments && trainee.assessments.length > 0 
+                ? trainee.assessments[trainee.assessments.length - 1] 
+                : null;
+            
+            const lastReviewDate = latestAssessment 
+                ? new Date(latestAssessment.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+                : 'No reviews yet';
+            
+            content.innerHTML = `
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="openAssessmentForm(${traineeId})">📝 New Quarterly Assessment</button>
+                    <button class="btn btn-success" onclick="exportTraineeData(${traineeId})">📥 Export Trainee Data</button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card ${trainee.currentYear === 1 ? '' : 'success'}">
+                        <h3>Program Year</h3>
+                        <div class="value">Year ${trainee.currentYear}</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <h3>Overall Progress</h3>
+                        <div class="value">${Math.round(trainee.progress.overall)}%</div>
+                    </div>
+                    <div class="stat-card secondary">
+                        <h3>Attendance Rate</h3>
+                        <div class="value">${calculateAttendanceRate(trainee)}%</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Last Review</h3>
+                        <div class="value" style="font-size: 1.2rem;">${lastReviewDate}</div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Personal Information</h3>
+                        <p><strong>Email:</strong> ${trainee.email}</p>
+                        <p style="margin-top: 0.5rem;"><strong>Start Date:</strong> ${new Date(trainee.startDate).toLocaleDateString()}</p>
+                        <p style="margin-top: 0.5rem;"><strong>Area of Interest:</strong> ${trainee.areaOfInterest || 'Not specified'}</p>
+                        <p style="margin-top: 0.5rem;"><strong>GSSE Status:</strong> ${formatGSSEStatus(trainee.gsseStatus)}</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Progress Breakdown</h3>
+                        <p><strong>Year 1:</strong> ${trainee.progress.year1}%</p>
+                        <div class="progress-bar" style="margin: 0.5rem 0 1rem 0;">
+                            <div class="progress-fill" style="width: ${trainee.progress.year1}%"></div>
+                        </div>
+                        <p><strong>Year 2:</strong> ${trainee.progress.year2}%</p>
+                        <div class="progress-bar" style="margin: 0.5rem 0;">
+                            <div class="progress-fill" style="width: ${trainee.progress.year2}%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Attendance Record</h3>
+                    <div class="attendance-grid">
+                        ${EDUCATION_SESSIONS.map(session => {
+                            const status = trainee.attendance?.[session] || 'pending';
+                            return `<div class="attendance-cell ${status}" title="${session}: ${status}">${session.split(' ')[1]}</div>`;
+                        }).join('')}
+                    </div>
+                    <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);">
+                        <span style="color: var(--success);">■</span> Present 
+                        <span style="color: var(--danger); margin-left: 1rem;">■</span> Absent 
+                        <span style="color: var(--border); margin-left: 1rem;">■</span> Pending
+                    </p>
+                </div>
+                
+                <div class="card" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Assessment History</h3>
+                    ${trainee.assessments && trainee.assessments.length > 0 ? `
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Strengths</th>
+                                        <th>Development Areas</th>
+                                        <th>Goals</th>
+                                        <th>Educator Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${trainee.assessments.map(assessment => `
+                                        <tr>
+                                            <td>${new Date(assessment.date).toLocaleDateString()}</td>
+                                            <td>${assessment.strengths}</td>
+                                            <td>${assessment.development}</td>
+                                            <td>${assessment.goals}</td>
+                                            <td>
+                                                <div class="notes-display">${assessment.educatorNotes}</div>
+                                                <span class="notes-date">${new Date(assessment.educatorNotesDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<p style="color: var(--text-muted);">No assessments recorded yet.</p>'}
+                </div>
+            `;
+        }
+
+        function formatGSSEStatus(status) {
+            if (status === 'yes') return 'Yes';
+            if (status === 'undecided') return 'Undecided';
+            if (status.includes('-')) {
+                const [year, month] = status.split('-');
+                const date = new Date(year, parseInt(month) - 1);
+                return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+            }
+            return status;
+        }
+
+        function openAssessmentForm(traineeId) {
+            const trainee = database.trainees.find(t => t.id === traineeId);
+            const modal = document.getElementById('assessmentModal');
+            const content = document.getElementById('assessmentFormContent');
+            
+            content.innerHTML = `
+                <div class="alert alert-info">
+                    <strong>Trainee:</strong> ${trainee.name}<br>
+                    <strong>Current Progress:</strong> ${Math.round(trainee.progress.overall)}%
+                </div>
+                <form id="assessmentForm" class="survey-form">
+                    <div class="form-group">
+                        <label>Assessment Date</label>
+                        <input type="date" name="date" value="${new Date().toISOString().split('T')[0]}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Strengths Observed</label>
+                        <textarea name="strengths" required placeholder="Document key strengths and achievements..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Areas for Development</label>
+                        <textarea name="development" required placeholder="Identify areas needing improvement..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Goals for Next Quarter</label>
+                        <textarea name="goals" required placeholder="Set specific, measurable goals..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Educator Notes (Private - Only visible to educators)</label>
+                        <textarea name="educatorNotes" required placeholder="Internal notes for educator reference..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="width: 100%;">Save Assessment</button>
+                </form>
+            `;
+            
+            document.getElementById('assessmentForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                const assessment = {
+                    date: formData.get('date'),
+                    strengths: formData.get('strengths'),
+                    development: formData.get('development'),
+                    goals: formData.get('goals'),
+                    educatorNotes: formData.get('educatorNotes'),
+                    educatorNotesDate: formData.get('date')
+                };
+                
+                if (!trainee.assessments) trainee.assessments = [];
+                trainee.assessments.push(assessment);
+                
+                saveDatabase(database);
+                closeAssessmentModal();
+                alert('Assessment saved successfully!');
+                loadTraineeDetail(traineeId);
+            });
+            
+            modal.classList.add('active');
+        }
+
+        function closeAssessmentModal() {
+            document.getElementById('assessmentModal').classList.remove('active');
+        }
+
+        function loadAnalytics() {
+            const content = document.getElementById('analyticsContent');
+            
+            content.innerHTML = `
+                <div class="action-buttons">
+                    <button class="btn btn-success" onclick="exportAllTraineesData()">📥 Export All Data (Excel)</button>
+                    <button class="btn btn-primary" onclick="exportAnalyticsReport()">📊 Export Analytics Report</button>
+                </div>
+                
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">Detailed Trainee Statistics</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Area of Interest</th>
+                                    <th>GSSE</th>
+                                    <th>BSSP Attendance</th>
+                                    <th>Date of Last Review</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${database.trainees.map(trainee => {
+                                    const latestAssessment = trainee.assessments && trainee.assessments.length > 0 
+                                        ? trainee.assessments[trainee.assessments.length - 1] 
+                                        : null;
+                                    const lastReviewDate = latestAssessment 
+                                        ? new Date(latestAssessment.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+                                        : 'N/A';
+                                    
+                                    return `
+                                        <tr>
+                                            <td>
+                                                <span class="badge ${trainee.currentYear === 1 ? 'badge-year1' : 'badge-year2'}">
+                                                    ${trainee.name}
+                                                </span>
+                                            </td>
+                                            <td>${trainee.areaOfInterest || 'Not specified'}</td>
+                                            <td>${formatGSSEStatus(trainee.gsseStatus)}</td>
+                                            <td>
+                                                <div class="attendance-grid">
+                                                    ${EDUCATION_SESSIONS.slice(0, 10).map(session => {
+                                                        const status = trainee.attendance?.[session] || 'pending';
+                                                        return `<div class="attendance-cell ${status}" title="${session}: ${status}"></div>`;
+                                                    }).join('')}
+                                                </div>
+                                                <small>${calculateAttendanceRate(trainee)}% attendance</small>
+                                            </td>
+                                            <td>${lastReviewDate}</td>
+                                            <td>
+                                                ${latestAssessment ? `
+                                                    <div class="notes-display">${latestAssessment.educatorNotes}</div>
+                                                    <span class="notes-date">${new Date(latestAssessment.educatorNotesDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span>
+                                                ` : '<em style="color: var(--text-muted);">No notes</em>'}
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Progress Timeline</h3>
+                        <div class="chart-container">
+                            <canvas id="timelineChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Attendance Overview</h3>
+                        <div class="chart-container">
+                            <canvas id="attendanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                // Timeline Chart
+                const ctx1 = document.getElementById('timelineChart');
+                if (ctx1 && charts.timeline) charts.timeline.destroy();
+                const datasets = database.trainees.map((trainee, index) => {
+                    const colors = ['rgba(52, 152, 219, 1)', 'rgba(39, 174, 96, 1)', 'rgba(243, 156, 18, 1)'];
+                    return {
+                        label: trainee.name,
+                        data: trainee.monthlyProgress || [0, 0, 0, 0, 0, 0],
+                        borderColor: colors[index % colors.length],
+                        backgroundColor: colors[index % colors.length].replace('1)', '0.1)'),
+                        tension: 0.4
+                    };
+                });
+                
+                charts.timeline = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'],
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+                
+                // Attendance Chart
+                const ctx2 = document.getElementById('attendanceChart');
+                if (ctx2 && charts.attendance) charts.attendance.destroy();
+                charts.attendance = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: database.trainees.map(t => t.name),
+                        datasets: [{
+                            label: 'Attendance Rate (%)',
+                            data: database.trainees.map(t => calculateAttendanceRate(t)),
+                            backgroundColor: database.trainees.map(t => 
+                                t.currentYear === 1 ? 'rgba(52, 152, 219, 0.7)' : 'rgba(39, 174, 96, 0.7)'
+                            ),
+                            borderColor: database.trainees.map(t => 
+                                t.currentYear === 1 ? 'rgba(52, 152, 219, 1)' : 'rgba(39, 174, 96, 1)'
+                            ),
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            }, 100);
+        }
+
+        function loadAttendance() {
+            const content = document.getElementById('attendanceContent');
+            
+            content.innerHTML = `
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="openAttendanceModal()">✓ Record Attendance</button>
+                    <button class="btn btn-success" onclick="exportAttendanceData()">📥 Export Attendance</button>
+                </div>
+                
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">Session Attendance</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Trainee</th>
+                                    ${EDUCATION_SESSIONS.map(s => `<th style="min-width: 80px;">${s}</th>`).join('')}
+                                    <th>Attendance Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${database.trainees.map(trainee => `
+                                    <tr>
+                                        <td><strong>${trainee.name}</strong></td>
+                                        ${EDUCATION_SESSIONS.map(session => {
+                                            const status = trainee.attendance?.[session] || 'pending';
+                                            const badges = {
+                                                'present': '<span class="badge badge-success">✓</span>',
+                                                'absent': '<span class="badge badge-danger">✗</span>',
+                                                'pending': '<span class="badge" style="background: #e0e6ed; color: #7f8c8d;">-</span>'
+                                            };
+                                            return `<td style="text-align: center;">${badges[status]}</td>`;
+                                        }).join('')}
+                                        <td><strong>${calculateAttendanceRate(trainee)}%</strong></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function openAttendanceModal() {
+            const modal = document.getElementById('attendanceModal');
+            const content = document.getElementById('attendanceFormContent');
+            
+            content.innerHTML = `
+                <form id="attendanceForm" class="survey-form">
+                    <div class="form-group">
+                        <label>Session</label>
+                        <select name="session" required>
+                            <option value="">Select session...</option>
+                            ${EDUCATION_SESSIONS.map(s => `<option value="${s}">${s}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" name="date" value="${new Date().toISOString().split('T')[0]}" required>
+                    </div>
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem;">Mark Attendance</h3>
+                    <div id="attendanceTraineesList">
+                        ${database.trainees.map(trainee => `
+                            <div class="attendance-row" id="row-${trainee.id}">
+                                <label style="font-weight: 600; display: block; margin-bottom: 0.8rem; font-size: 1.1rem; color: var(--text-dark);">
+                                    ${trainee.name}
+                                </label>
+                                <div class="attendance-buttons-container" id="buttons-${trainee.id}">
+                                    <input type="radio" 
+                                           name="trainee_${trainee.id}" 
+                                           value="present" 
+                                           id="present-${trainee.id}" 
+                                           class="attendance-option"
+                                           required
+                                           onchange="handleAttendanceSelection(${trainee.id}, 'present')">
+                                    <label for="present-${trainee.id}" class="attendance-button present">
+                                        ✓ Present
+                                    </label>
+                                    
+                                    <input type="radio" 
+                                           name="trainee_${trainee.id}" 
+                                           value="absent" 
+                                           id="absent-${trainee.id}" 
+                                           class="attendance-option"
+                                           onchange="handleAttendanceSelection(${trainee.id}, 'absent')">
+                                    <label for="absent-${trainee.id}" class="attendance-button absent">
+                                        ✗ Absent
+                                    </label>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 1.5rem; padding: 1rem; font-size: 1.1rem;">
+                        💾 Save Attendance
+                    </button>
+                </form>
+            `;
+            
+            // Handle attendance selection visual feedback
+            window.handleAttendanceSelection = function(traineeId, status) {
+                const container = document.getElementById(`buttons-${traineeId}`);
+                const row = document.getElementById(`row-${traineeId}`);
+                
+                // Remove previous selection classes
+                container.classList.remove('selected-present', 'selected-absent');
+                
+                // Add new selection class
+                if (status === 'present') {
+                    container.classList.add('selected-present');
+                } else {
+                    container.classList.add('selected-absent');
+                }
+                
+                // Highlight the row
+                row.classList.add('has-selection');
+            };
+            
+            document.getElementById('attendanceForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const session = formData.get('session');
+                
+                database.trainees.forEach(trainee => {
+                    const status = formData.get(`trainee_${trainee.id}`);
+                    if (!trainee.attendance) trainee.attendance = {};
+                    trainee.attendance[session] = status;
+                });
+                
+                saveDatabase(database);
+                closeAttendanceModal();
+                alert('Attendance recorded successfully!');
+                loadAttendance();
+            });
+            
+            modal.classList.add('active');
+        }
+
+        function closeAttendanceModal() {
+            document.getElementById('attendanceModal').classList.remove('active');
+        }
+
+        // Progress, Surveys, Documents, Survey Management - keeping existing implementations
+        function loadProgress() {
+            const content = document.getElementById('progressContent');
+            content.innerHTML = `
+                <div class="action-buttons">
+                    <button class="btn btn-success" onclick="exportMyData()">📥 Export My Progress (Excel)</button>
+                </div>
+                
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">Progress Over Time</h3>
+                    <div class="chart-container">
+                        <canvas id="progressDetailChart"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                const ctx = document.getElementById('progressDetailChart');
+                if (ctx && charts.progressDetail) charts.progressDetail.destroy();
+                charts.progressDetail = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'],
+                        datasets: [{
+                            label: 'My Progress (%)',
+                            data: currentUser.monthlyProgress || [0, 0, 0, 0, 0, 0],
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            }, 100);
+        }
+
+        function loadSurveys() {
+            const content = document.getElementById('surveysContent');
+            const activeSurveys = database.surveys.filter(s => s.active);
+            
+            if (activeSurveys.length === 0) {
+                content.innerHTML = '<div class="card"><p>No active surveys at the moment.</p></div>';
+                return;
+            }
+            
+            content.innerHTML = activeSurveys.map(survey => `
+                <div class="card">
+                    <div class="card-header">
+                        <h3>${survey.title}</h3>
+                        <button class="btn btn-primary" onclick="openSurvey(${survey.id})">Complete Survey</button>
+                    </div>
+                    <p style="color: var(--text-muted);">${survey.questions.length} questions</p>
+                </div>
+            `).join('');
+        }
+
+        function loadDocuments() {
+            const content = document.getElementById('documentsContent');
+            const userDocs = currentUser.documents || [];
+            
+            content.innerHTML = `
+                <div class="card">
+                    <h3>My Documents (${userDocs.length})</h3>
+                    <p style="margin-top: 1rem; color: var(--text-muted);">Document upload functionality available.</p>
+                </div>
+            `;
+        }
+        
+        function loadTraineesList() {
+            const content = document.getElementById('traineesContent');
+            
+            const createButton = (currentUserRole === 'educator' || currentUserRole === 'admin') ? 
+                '<button class="btn btn-primary" onclick="openCreateTraineeModal()">+ Create New Trainee</button>' : '';
+            
+            content.innerHTML = `
+                <div class="action-buttons">
+                    ${createButton}
+                    <button class="btn btn-success" onclick="exportAllTraineesData()">📥 Export All Trainees</button>
+                </div>
+                
+                <div style="margin-top: 1.5rem;">
+                    ${database.trainees.map(trainee => {
+                        const bgColor = trainee.currentYear === 1 ? 'var(--year1-color)' : 'var(--year2-color)';
+                        return `
+                            <div class="trainee-list-card" onclick="showTraineeProfile(${trainee.id})">
+                                <div class="trainee-list-info">
+                                    <div class="trainee-list-avatar" style="background: ${bgColor}">
+                                        ${trainee.name.charAt(0)}
+                                    </div>
+                                    <div class="trainee-list-details">
+                                        <h4>${trainee.name}</h4>
+                                        <div class="trainee-list-meta">
+                                            ${trainee.email} • Year ${trainee.currentYear} • ${Math.round(trainee.progress.overall)}% Progress
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="badge ${trainee.currentYear === 1 ? 'badge-year1' : 'badge-year2'}">
+                                        Year ${trainee.currentYear}
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+        
+        function loadTraineeProfile(traineeId) {
+            const trainee = database.trainees.find(t => t.id === traineeId);
+            const content = document.getElementById('traineeProfileContent');
+            
+            const latestAssessment = trainee.assessments && trainee.assessments.length > 0 
+                ? trainee.assessments[trainee.assessments.length - 1] 
+                : null;
+            
+            const lastReviewDate = latestAssessment 
+                ? new Date(latestAssessment.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+                : 'No reviews yet';
+            
+            const surveyResponses = database.surveyResponses.filter(r => r.traineeId === traineeId);
+            
+            content.innerHTML = `
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="openAssessmentForm(${traineeId})">📝 New Assessment</button>
+                    <button class="btn btn-success" onclick="exportTraineeData(${traineeId})">📥 Export Data</button>
+                    <button class="btn btn-secondary" onclick="showTraineeDetail(${traineeId})">📊 Quick Stats</button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card ${trainee.currentYear === 1 ? '' : 'success'}">
+                        <h3>Program Year</h3>
+                        <div class="value">Year ${trainee.currentYear}</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <h3>Overall Progress</h3>
+                        <div class="value">${Math.round(trainee.progress.overall)}%</div>
+                    </div>
+                    <div class="stat-card secondary">
+                        <h3>Attendance Rate</h3>
+                        <div class="value">${calculateAttendanceRate(trainee)}%</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Forms Completed</h3>
+                        <div class="value">${surveyResponses.length}</div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Personal Information</h3>
+                        <p><strong>Name:</strong> ${trainee.name}</p>
+                        <p style="margin-top: 0.5rem;"><strong>Email:</strong> ${trainee.email}</p>
+                        <p style="margin-top: 0.5rem;"><strong>Start Date:</strong> ${new Date(trainee.startDate).toLocaleDateString()}</p>
+                        <p style="margin-top: 0.5rem;"><strong>Current Year:</strong> Year ${trainee.currentYear}</p>
+                        <p style="margin-top: 0.5rem;"><strong>Area of Interest:</strong> ${trainee.areaOfInterest || 'Not specified'}</p>
+                        <p style="margin-top: 0.5rem;"><strong>GSSE Status:</strong> ${formatGSSEStatus(trainee.gsseStatus)}</p>
+                        <p style="margin-top: 0.5rem;"><strong>Last Review:</strong> ${lastReviewDate}</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Progress Overview</h3>
+                        <div class="chart-container" style="height: 250px;">
+                            <canvas id="traineeProfileChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Form Submissions (${surveyResponses.length})</h3>
+                    ${surveyResponses.length > 0 ? `
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Form Title</th>
+                                        <th>Responses</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${surveyResponses.map(response => {
+                                        const survey = database.surveys.find(s => s.id === response.surveyId);
+                                        return `
+                                            <tr>
+                                                <td>${new Date(response.date).toLocaleDateString()}</td>
+                                                <td><strong>${survey ? survey.title : 'Unknown Form'}</strong></td>
+                                                <td>
+                                                    ${Object.entries(response.responses).map(([key, value]) => 
+                                                        `<div style="margin-bottom: 0.3rem;"><strong>${key}:</strong> ${value}</div>`
+                                                    ).join('')}
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<p style="color: var(--text-muted);">No form submissions yet.</p>'}
+                </div>
+                
+                <div class="card" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Assessment History</h3>
+                    ${trainee.assessments && trainee.assessments.length > 0 ? `
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Strengths</th>
+                                        <th>Development Areas</th>
+                                        <th>Goals</th>
+                                        <th>Educator Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${trainee.assessments.map(assessment => `
+                                        <tr>
+                                            <td>${new Date(assessment.date).toLocaleDateString()}</td>
+                                            <td>${assessment.strengths}</td>
+                                            <td>${assessment.development}</td>
+                                            <td>${assessment.goals}</td>
+                                            <td>
+                                                <div class="notes-display">${assessment.educatorNotes}</div>
+                                                <span class="notes-date">${new Date(assessment.educatorNotesDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</span>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<p style="color: var(--text-muted);">No assessments recorded yet.</p>'}
+                </div>
+                
+                <div class="card" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Attendance Record</h3>
+                    <div class="attendance-grid">
+                        ${EDUCATION_SESSIONS.map(session => {
+                            const status = trainee.attendance?.[session] || 'pending';
+                            return `<div class="attendance-cell ${status}" title="${session}: ${status}">${session.split(' ')[1]}</div>`;
+                        }).join('')}
+                    </div>
+                    <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);">
+                        <span style="color: var(--success);">■</span> Present 
+                        <span style="color: var(--danger); margin-left: 1rem;">■</span> Absent 
+                        <span style="color: var(--border); margin-left: 1rem;">■</span> Pending
+                    </p>
+                </div>
+                
+                <div class="card" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Documents (${trainee.documents?.length || 0})</h3>
+                    ${trainee.documents && trainee.documents.length > 0 ? `
+                        <div class="file-list">
+                            ${trainee.documents.map(doc => `
+                                <div class="file-item">
+                                    <div class="file-item-info">
+                                        <div class="file-icon">${doc.name.split('.').pop().toUpperCase()}</div>
+                                        <div>
+                                            <div style="font-weight: 600;">${doc.name}</div>
+                                            <div style="font-size: 0.85rem; color: var(--text-muted);">
+                                                ${new Date(doc.uploadDate).toLocaleDateString()} • ${(doc.size / 1024).toFixed(1)} KB
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p style="color: var(--text-muted);">No documents uploaded yet.</p>'}
+                </div>
+            `;
+            
+            // Create progress chart
+            setTimeout(() => {
+                const ctx = document.getElementById('traineeProfileChart');
+                if (ctx && charts.traineeProfile) charts.traineeProfile.destroy();
+                charts.traineeProfile = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'],
+                        datasets: [{
+                            label: 'Progress (%)',
+                            data: trainee.monthlyProgress || [0, 0, 0, 0, 0, 0],
+                            borderColor: trainee.currentYear === 1 ? 'rgba(52, 152, 219, 1)' : 'rgba(39, 174, 96, 1)',
+                            backgroundColor: trainee.currentYear === 1 ? 'rgba(52, 152, 219, 0.1)' : 'rgba(39, 174, 96, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            }, 100);
+        }
+        
+        function loadForms() {
+            const content = document.getElementById('formsContent');
+            
+            content.innerHTML = `
+                <div style="margin-top: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem;">All Forms (${database.surveys.length})</h3>
+                    ${database.surveys.map(survey => `
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h3>${survey.title}</h3>
+                                    <p style="color: var(--text-muted); font-size: 0.9rem;">
+                                        ${survey.questions.length} questions • 
+                                        Created ${new Date(survey.createdDate).toLocaleDateString()} • 
+                                        <span class="badge ${survey.active ? 'badge-success' : 'badge-warning'}">
+                                            ${survey.active ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button class="btn btn-secondary" onclick="viewFormResponses(${survey.id})">View Responses</button>
+                                    <button class="btn ${survey.active ? 'btn-warning' : 'btn-success'}" onclick="toggleFormStatus(${survey.id})">
+                                        ${survey.active ? 'Deactivate' : 'Activate'}
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="margin-top: 1rem;">
+                                <strong>Questions:</strong>
+                                <ol style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                                    ${survey.questions.map(q => `
+                                        <li style="margin-bottom: 0.3rem;">${q.question} <em style="color: var(--text-muted);">(${q.type})</em></li>
+                                    `).join('')}
+                                </ol>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        function loadFormCreator() {
+            const content = document.getElementById('formCreatorContent');
+            
+            content.innerHTML = `
+                <div class="card">
+                    <form id="formCreatorForm" class="survey-form">
+                        <div class="form-group">
+                            <label>Form Title</label>
+                            <input type="text" name="title" required placeholder="e.g., Monthly Self-Assessment">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Form Description</label>
+                            <textarea name="description" placeholder="Brief description of this form's purpose..."></textarea>
+                        </div>
+                        
+                        <div class="form-builder-section">
+                            <h3 style="margin-bottom: 1rem;">Form Questions</h3>
+                            <div id="questionsContainer">
+                                <div class="question-builder" data-question-index="1">
+                                    <div class="question-builder-header">
+                                        <strong>Question 1</strong>
+                                        <button type="button" class="btn btn-danger" onclick="removeQuestion(1)" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Remove</button>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Question Text</label>
+                                        <input type="text" name="question_1" required placeholder="Enter your question...">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Question Type</label>
+                                        <select name="type_1" required>
+                                            <option value="text">Text Response</option>
+                                            <option value="rating">Rating Scale (1-5)</option>
+                                            <option value="yesno">Yes/No</option>
+                                            <option value="date">Date</option>
+                                            <option value="number">Number</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary" onclick="addFormQuestion()">+ Add Question</button>
+                        </div>
+                        
+                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                            <button type="submit" class="btn btn-success" style="flex: 1;">Create Form</button>
+                            <button type="button" class="btn btn-secondary" onclick="showSection('forms')">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            let questionCount = 1;
+            
+            window.addFormQuestion = function() {
+                questionCount++;
+                const container = document.getElementById('questionsContainer');
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-builder';
+                questionDiv.setAttribute('data-question-index', questionCount);
+                questionDiv.innerHTML = `
+                    <div class="question-builder-header">
+                        <strong>Question ${questionCount}</strong>
+                        <button type="button" class="btn btn-danger" onclick="removeQuestion(${questionCount})" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Remove</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Question Text</label>
+                        <input type="text" name="question_${questionCount}" required placeholder="Enter your question...">
+                    </div>
+                    <div class="form-group">
+                        <label>Question Type</label>
+                        <select name="type_${questionCount}" required>
+                            <option value="text">Text Response</option>
+                            <option value="rating">Rating Scale (1-5)</option>
+                            <option value="yesno">Yes/No</option>
+                            <option value="date">Date</option>
+                            <option value="number">Number</option>
+                        </select>
+                    </div>
+                `;
+                container.appendChild(questionDiv);
+            };
+            
+            window.removeQuestion = function(index) {
+                const question = document.querySelector(`[data-question-index="${index}"]`);
+                if (question && document.querySelectorAll('.question-builder').length > 1) {
+                    question.remove();
+                } else {
+                    alert('You must have at least one question in the form.');
+                }
+            };
+            
+            document.getElementById('formCreatorForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const title = formData.get('title');
+                const description = formData.get('description');
+                const questions = [];
+                
+                const questionBuilders = document.querySelectorAll('.question-builder');
+                questionBuilders.forEach((builder, idx) => {
+                    const index = builder.getAttribute('data-question-index');
+                    const question = formData.get(`question_${index}`);
+                    const type = formData.get(`type_${index}`);
+                    if (question) {
+                        questions.push({
+                            id: parseInt(index),
+                            type: type,
+                            question: question,
+                            scale: type === 'rating' ? 5 : null
+                        });
+                    }
+                });
+                
+                const newForm = {
+                    id: database.surveys.length + 1,
+                    title: title,
+                    description: description,
+                    questions: questions,
+                    active: true,
+                    createdDate: new Date().toISOString()
+                };
+                
+                database.surveys.push(newForm);
+                saveDatabase(database);
+                
+                alert('Form created successfully!');
+                showSection('forms');
+            });
+        }
+        
+        function viewFormResponses(formId) {
+            const responses = database.surveyResponses.filter(r => r.surveyId === formId);
+            const form = database.surveys.find(s => s.id === formId);
+            alert(`Form: ${form.title}\n\nTotal Responses: ${responses.length}\n\nDetailed response analytics available in full version.`);
+        }
+        
+        function toggleFormStatus(formId) {
+            const form = database.surveys.find(s => s.id === formId);
+            form.active = !form.active;
+            saveDatabase(database);
+            loadForms();
+        }
+        
+        function loadDocuments() {
+            const content = document.getElementById('documentsContent');
+            const userDocs = currentUser.documents || [];
+            
+            content.innerHTML = `
+                <div class="card">
+                    <h3>My Documents (${userDocs.length})</h3>
+                    <p style="margin-top: 1rem; color: var(--text-muted);">Document upload functionality available.</p>
+                </div>
+            `;
+        }
+
+        function loadSurveyManagement() {
+            const content = document.getElementById('surveyManagementContent');
+            content.innerHTML = `
+                <div style="margin-top: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem;">Active Surveys</h3>
+                    ${database.surveys.map(survey => `
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h3>${survey.title}</h3>
+                                    <p style="color: var(--text-muted); font-size: 0.9rem;">${survey.questions.length} questions</p>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function openSurvey(surveyId) {
+            alert('Survey functionality available in full version');
+        }
+
+        function closeSurveyModal() {
+            document.getElementById('surveyModal').classList.remove('active');
+        }
+
+        function showCreateSurveyModal() {
+            alert('Survey creation functionality available');
+        }
+
+        function closeCreateSurveyModal() {
+            document.getElementById('createSurveyModal').classList.remove('active');
+        }
+
+        // Export Functions
+        function exportMyData() {
+            const trainee = currentUser;
+            const wb = XLSX.utils.book_new();
+            
+            const overviewData = [
+                ['BSSP Program Tracker - Personal Report'],
+                [''],
+                ['Name', trainee.name],
+                ['Email', trainee.email],
+                ['Start Date', new Date(trainee.startDate).toLocaleDateString()],
+                ['Current Year', `Year ${trainee.currentYear}`],
+                ['Area of Interest', trainee.areaOfInterest || 'Not specified'],
+                ['GSSE Status', formatGSSEStatus(trainee.gsseStatus)],
+                [''],
+                ['Progress Summary'],
+                ['Overall Progress', `${Math.round(trainee.progress.overall)}%`],
+                ['Attendance Rate', `${calculateAttendanceRate(trainee)}%`]
+            ];
+            const ws1 = XLSX.utils.aoa_to_sheet(overviewData);
+            XLSX.utils.book_append_sheet(wb, ws1, 'Overview');
+            
+            XLSX.writeFile(wb, `${trainee.name.replace(/\s+/g, '_')}_BSSP_Report.xlsx`);
+        }
+
+        function exportTraineeData(traineeId) {
+            const trainee = database.trainees.find(t => t.id === traineeId);
+            if (!trainee) return;
+            
+            const wb = XLSX.utils.book_new();
+            
+            const overviewData = [
+                ['BSSP Program Tracker - Trainee Report'],
+                [''],
+                ['Name', trainee.name],
+                ['Email', trainee.email],
+                ['Area of Interest', trainee.areaOfInterest || 'Not specified'],
+                ['GSSE Status', formatGSSEStatus(trainee.gsseStatus)],
+                ['Overall Progress', `${Math.round(trainee.progress.overall)}%`],
+                ['Attendance Rate', `${calculateAttendanceRate(trainee)}%`]
+            ];
+            const ws1 = XLSX.utils.aoa_to_sheet(overviewData);
+            XLSX.utils.book_append_sheet(wb, ws1, 'Overview');
+            
+            if (trainee.assessments && trainee.assessments.length > 0) {
+                const assessmentData = [['Date', 'Strengths', 'Development', 'Goals', 'Educator Notes']];
+                trainee.assessments.forEach(a => {
+                    assessmentData.push([
+                        new Date(a.date).toLocaleDateString(),
+                        a.strengths,
+                        a.development,
+                        a.goals,
+                        a.educatorNotes
+                    ]);
+                });
+                const ws2 = XLSX.utils.aoa_to_sheet(assessmentData);
+                XLSX.utils.book_append_sheet(wb, ws2, 'Assessments');
+            }
+            
+            XLSX.writeFile(wb, `${trainee.name.replace(/\s+/g, '_')}_Report.xlsx`);
+        }
+
+        function exportAllTraineesData() {
+            const wb = XLSX.utils.book_new();
+            
+            const summaryData = [
+                ['BSSP Program Tracker - All Trainees Summary'],
+                ['Generated:', new Date().toLocaleString()],
+                [''],
+                ['Name', 'Year', 'Area of Interest', 'GSSE', 'Progress', 'Attendance', 'Last Review']
+            ];
+            
+            database.trainees.forEach(trainee => {
+                const latestAssessment = trainee.assessments && trainee.assessments.length > 0 
+                    ? trainee.assessments[trainee.assessments.length - 1] 
+                    : null;
+                const lastReview = latestAssessment 
+                    ? new Date(latestAssessment.date).toLocaleDateString()
+                    : 'N/A';
+                
+                summaryData.push([
+                    trainee.name,
+                    trainee.currentYear,
+                    trainee.areaOfInterest || 'Not specified',
+                    formatGSSEStatus(trainee.gsseStatus),
+                    `${Math.round(trainee.progress.overall)}%`,
+                    `${calculateAttendanceRate(trainee)}%`,
+                    lastReview
+                ]);
+            });
+            
+            const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+            XLSX.utils.book_append_sheet(wb, ws1, 'Summary');
+            
+            XLSX.writeFile(wb, `BSSP_All_Trainees_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        function exportAnalyticsReport() {
+            alert('Analytics export functionality available');
+        }
+
+        function exportAttendanceData() {
+            const wb = XLSX.utils.book_new();
+            
+            const attendanceData = [
+                ['BSSP Attendance Report'],
+                ['Generated:', new Date().toLocaleString()],
+                [''],
+                ['Trainee', ...EDUCATION_SESSIONS, 'Attendance Rate']
+            ];
+            
+            database.trainees.forEach(trainee => {
+                const row = [
+                    trainee.name,
+                    ...EDUCATION_SESSIONS.map(s => trainee.attendance?.[s] || 'pending'),
+                    `${calculateAttendanceRate(trainee)}%`
+                ];
+                attendanceData.push(row);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(attendanceData);
+            XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+            
+            XLSX.writeFile(wb, `BSSP_Attendance_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+        
+        // Create Trainee Functions
+        function generateUsername(name) {
+            const nameParts = name.toLowerCase().split(' ');
+            const firstName = nameParts[0];
+            const lastName = nameParts[nameParts.length - 1];
+            const randomNum = Math.floor(Math.random() * 1000);
+            return `BSSP-${firstName.charAt(0)}${lastName}${randomNum}`;
+        }
+        
+        function generateTemporaryPassword() {
+            const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            let password = '';
+            for (let i = 0; i < 8; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
+        }
+        
+        function openCreateTraineeModal() {
+            const modal = document.getElementById('createTraineeModal');
+            const content = document.getElementById('createTraineeFormContent');
+            
+            content.innerHTML = `
+                <form id="createTraineeForm" class="survey-form">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" name="name" required placeholder="e.g., John Smith">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" name="email" required placeholder="e.g., john.smith@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Start Date *</label>
+                        <input type="date" name="startDate" value="${new Date().toISOString().split('T')[0]}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Program Year *</label>
+                        <select name="currentYear" required>
+                            <option value="1">Year 1</option>
+                            <option value="2">Year 2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Area of Interest (Optional)</label>
+                        <input type="text" name="areaOfInterest" placeholder="e.g., Trauma Surgery">
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Note:</strong> A unique username and temporary password will be automatically generated and displayed after creation.
+                    </div>
+                    <button type="submit" class="btn btn-success" style="width: 100%;">Create Trainee Profile</button>
+                </form>
+            `;
+            
+            document.getElementById('createTraineeForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                const username = generateUsername(formData.get('name'));
+                const password = generateTemporaryPassword();
+                
+                const newTrainee = {
+                    id: database.trainees.length + 1,
+                    name: formData.get('name'),
+                    email: formData.get('email'),
+                    username: username,
+                    password: password,
+                    startDate: formData.get('startDate'),
+                    currentYear: parseInt(formData.get('currentYear')),
+                    areaOfInterest: formData.get('areaOfInterest') || '',
+                    gsseStatus: 'undecided',
+                    progress: {
+                        year1: 0,
+                        year2: 0,
+                        overall: 0
+                    },
+                    attendance: {},
+                    assessments: [],
+                    documents: [],
+                    monthlyProgress: [0, 0, 0, 0, 0, 0]
+                };
+                
+                database.trainees.push(newTrainee);
+                logAuditEntry('CREATE', 'trainee', newTrainee.id, `Created new trainee: ${newTrainee.name}`, currentUser.name);
+                saveDatabase(database);
+                
+                closeCreateTraineeModal();
+                
+                alert(`Trainee Created Successfully!
+
+Name: ${newTrainee.name}
+Email: ${newTrainee.email}
+Username: ${username}
+Temporary Password: ${password}
+
+Please provide these credentials to the trainee. They should change their password upon first login.`);
+                
+                loadTraineesList();
+            });
+            
+            modal.classList.add('active');
+        }
+        
+        function closeCreateTraineeModal() {
+            document.getElementById('createTraineeModal').classList.remove('active');
+        }
+        
+        // Admin Panel Functions
+        function loadAdminPanel() {
+            const content = document.getElementById('adminPanelContent');
+            
+            content.innerHTML = `
+                <div class="admin-warning">
+                    <strong>⚠️ Administrator Access</strong><br>
+                    You have elevated privileges. All actions are logged and auditable. Use responsibly.
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">User Management</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <button class="btn btn-primary" onclick="showPasswordResetList()">🔑 Reset User Passwords</button>
+                            <button class="btn btn-warning" onclick="manageTrainees()">👥 Manage Trainees</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem;">Data Management</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <button class="btn btn-secondary" onclick="viewAllFormResponses()">📋 View All Form Responses</button>
+                            <button class="btn btn-warning" onclick="manageFormsAdmin()">🗑️ Delete Forms</button>
+                            <button class="btn btn-danger" onclick="confirmDatabaseReset()">⚠️ Reset Database</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">System Statistics</h3>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                        <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">${database.trainees.length}</div>
+                            <div style="font-size: 0.9rem; color: var(--text-muted);">Total Trainees</div>
+                        </div>
+                        <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--success);">${database.surveys.length}</div>
+                            <div style="font-size: 0.9rem; color: var(--text-muted);">Total Forms</div>
+                        </div>
+                        <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--warning);">${database.surveyResponses.length}</div>
+                            <div style="font-size: 0.9rem; color: var(--text-muted);">Form Responses</div>
+                        </div>
+                        <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: 700; color: var(--danger);">${database.auditLog ? database.auditLog.length : 0}</div>
+                            <div style="font-size: 0.9rem; color: var(--text-muted);">Audit Entries</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function showPasswordResetList() {
+            const modal = document.getElementById('resetPasswordModal');
+            const content = document.getElementById('resetPasswordFormContent');
+            
+            content.innerHTML = `
+                <div class="card" style="max-height: 500px; overflow-y: auto;">
+                    <h3 style="margin-bottom: 1rem;">Select User to Reset Password</h3>
+                    ${database.trainees.map(trainee => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; border-bottom: 1px solid var(--border);">
+                            <div>
+                                <strong>${trainee.name}</strong><br>
+                                <small style="color: var(--text-muted);">${trainee.email} • Username: ${trainee.username}</small>
+                            </div>
+                            <button class="btn btn-warning" onclick="resetUserPassword(${trainee.id}, 'trainee')" style="padding: 0.4rem 0.8rem;">
+                                Reset Password
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+        
+        function resetUserPassword(userId, userType) {
+            const newPassword = generateTemporaryPassword();
+            
+            if (userType === 'trainee') {
+                const trainee = database.trainees.find(t => t.id === userId);
+                trainee.password = newPassword;
+                logAuditEntry('PASSWORD_RESET', 'trainee', userId, `Password reset for ${trainee.name}`, currentUser.name);
+                
+                alert(`Password Reset Successful!
+
+User: ${trainee.name}
+Username: ${trainee.username}
+New Temporary Password: ${newPassword}
+
+Please provide this password to the user securely.`);
+            }
+            
+            saveDatabase(database);
+            closeResetPasswordModal();
+        }
+        
+        function closeResetPasswordModal() {
+            document.getElementById('resetPasswordModal').classList.remove('active');
+        }
+        
+        function viewAllFormResponses() {
+            if (!confirm('This will show all form responses from all trainees. Continue?')) return;
+            
+            const responses = database.surveyResponses;
+            let message = `Total Form Responses: ${responses.length}\n\n`;
+            
+            responses.slice(0, 10).forEach(response => {
+                const trainee = database.trainees.find(t => t.id === response.traineeId);
+                const survey = database.surveys.find(s => s.id === response.surveyId);
+                message += `${trainee.name} - ${survey.title} (${new Date(response.date).toLocaleDateString()})\n`;
+            });
+            
+            if (responses.length > 10) {
+                message += `\n... and ${responses.length - 10} more responses`;
+            }
+            
+            alert(message);
+        }
+        
+        function manageFormsAdmin() {
+            if (!confirm('Delete forms? This action cannot be undone and will remove all associated responses.')) return;
+            
+            const formList = database.surveys.map((s, i) => `${i + 1}. ${s.title}`).join('\n');
+            const formNum = prompt(`Enter form number to delete:\n\n${formList}`);
+            
+            if (formNum) {
+                const index = parseInt(formNum) - 1;
+                if (index >= 0 && index < database.surveys.length) {
+                    const form = database.surveys[index];
+                    database.surveys.splice(index, 1);
+                    database.surveyResponses = database.surveyResponses.filter(r => r.surveyId !== form.id);
+                    logAuditEntry('DELETE', 'form', form.id, `Deleted form: ${form.title}`, currentUser.name);
+                    saveDatabase(database);
+                    alert('Form deleted successfully.');
+                    loadAdminPanel();
+                }
+            }
+        }
+        
+        function manageTrainees() {
+            showSection('trainees');
+        }
+        
+        function confirmDatabaseReset() {
+            if (confirm('⚠️ WARNING: This will reset the entire database to default state. All data will be lost. Are you absolutely sure?')) {
+                if (confirm('This is your final warning. Type YES in the next prompt to proceed.')) {
+                    const confirmation = prompt('Type YES to reset database:');
+                    if (confirmation === 'YES') {
+                        localStorage.removeItem(DB_KEY);
+                        alert('Database reset. Please refresh the page.');
+                        location.reload();
+                    }
+                }
+            }
+        }
+        
+        function loadAuditLog() {
+            const content = document.getElementById('auditLogContent');
+            const logs = database.auditLog || [];
+            
+            content.innerHTML = `
+                <div class="action-buttons">
+                    <button class="btn btn-success" onclick="exportAuditLog()">📥 Export Audit Log</button>
+                    <button class="btn btn-secondary" onclick="filterAuditLog()">🔍 Filter Logs</button>
+                </div>
+                
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem;">Recent Activity (${logs.length} entries)</h3>
+                    ${logs.length > 0 ? `
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Action</th>
+                                        <th>Target</th>
+                                        <th>Details</th>
+                                        <th>Modified By</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${logs.slice().reverse().slice(0, 50).map(log => `
+                                        <tr class="${log.modifierRole === 'admin' ? 'admin-modified-row' : ''}">
+                                            <td>${new Date(log.timestamp).toLocaleString()}</td>
+                                            <td><strong>${log.action}</strong></td>
+                                            <td>${log.targetType} #${log.targetId}</td>
+                                            <td>${log.details}</td>
+                                            <td>
+                                                ${log.modifiedBy}
+                                                ${log.modifierRole === 'admin' ? '<span class="admin-modified-badge">ADMIN</span>' : ''}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<p style="color: var(--text-muted);">No audit log entries yet.</p>'}
+                </div>
+            `;
+        }
+        
+        function exportAuditLog() {
+            const wb = XLSX.utils.book_new();
+            const logs = database.auditLog || [];
+            
+            const auditData = [
+                ['BSSP Audit Log'],
+                ['Generated:', new Date().toLocaleString()],
+                [''],
+                ['Timestamp', 'Action', 'Target Type', 'Target ID', 'Details', 'Modified By', 'Role']
+            ];
+            
+            logs.forEach(log => {
+                auditData.push([
+                    new Date(log.timestamp).toLocaleString(),
+                    log.action,
+                    log.targetType,
+                    log.targetId,
+                    log.details,
+                    log.modifiedBy,
+                    log.modifierRole
+                ]);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(auditData);
+            XLSX.utils.book_append_sheet(wb, ws, 'Audit Log');
+            
+            XLSX.writeFile(wb, `BSSP_AuditLog_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+        
+        function filterAuditLog() {
+            alert('Audit log filtering functionality available in full version.');
+        }
+        
+        function closeEditFormDataModal() {
+            document.getElementById('editFormDataModal').classList.remove('active');
+        }
+
+        // Initialize
+        database = initDatabase();
+    </script>
+</body>
+</html>
